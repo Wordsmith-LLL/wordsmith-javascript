@@ -3,16 +3,20 @@
   "private": true,
   "scripts": {
     "lerna": "lerna",
-    "bootstrap": "lerna bootstrap --no-ci",
+    "bootstrap": "npm install",
     "lint": "lerna run lint",
     "test": "lerna run test",
     "build": "lerna run build",
-    "clean": "lerna clean",
+    "clean": "rm -rf node_modules packages/**/node_modules",
     "release": "del-cli packages/**/package-lock.json && lerna version --force-publish",
     "publish-npm": "lerna run publish-npm"
   },
+  "workspaces": [
+    "packages/*",
+    "packages/angular/projects/*"
+  ],
   "devDependencies": {
     "del-cli": "^4.0.1",
-    "lerna": "^4.0.0"
+    "lerna": "^8.0.0"
   }
 }
