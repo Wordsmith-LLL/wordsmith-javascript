@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://www.wordsmith.is">
-    <img src="https://raw.githubusercontent.com/wordsmith/wordsmith-javascript/master/media/wordsmith.png" height="60">
+    <img src="https://raw.githubusercontent.com/Wordsmith-LLL/wordsmith-javascript/master/media/wordsmith.png" height="60">
   </a>
 </p>
 <p align="center">
@@ -26,7 +26,7 @@ Related packages:
 
 Learn more about Wordsmith Native in the [Wordsmith Developer Hub](https://developers.wordsmith.is/docs/native).
 
-![cli](https://raw.githubusercontent.com/wordsmith/wordsmith-javascript/master/media/cli.gif)
+![cli](https://raw.githubusercontent.com/Wordsmith-LLL/wordsmith-javascript/master/media/cli.gif)
 
 # Upgrade to v2
 
