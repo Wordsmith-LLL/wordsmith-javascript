@@ -25,7 +25,7 @@ describe('ws instance', () => {
       token: 'abcd',
     });
 
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/languages')
       .reply(200, {
         data: [
@@ -47,7 +47,7 @@ describe('ws instance', () => {
       token: 'abcd',
     });
 
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/languages')
       .reply(200, {
         data: [
@@ -74,7 +74,7 @@ describe('ws instance', () => {
       token: 'abcd',
     });
 
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/content/el_GR')
       .reply(200, {
         data: {
@@ -100,7 +100,7 @@ describe('ws instance', () => {
       token: 'abcd',
     });
 
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/content/el_GR2')
       .reply(500);
 
@@ -119,7 +119,7 @@ describe('ws instance', () => {
       token: 'abcd',
     });
 
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/content/el_GR2')
       .reply(200, {});
 
@@ -144,7 +144,7 @@ describe('ws instance', () => {
       token: 'abcd',
     });
 
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/languages')
       .reply(500);
 
@@ -162,7 +162,7 @@ describe('ws instance', () => {
       token: 'abcd',
     });
 
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/languages')
       .reply(200, {});
 
@@ -192,7 +192,7 @@ describe('ws instance', () => {
   });
 
   it('fetchTranslations respects filterTags', async () => {
-    const scope = nock(ws.cdsHost)
+    const scope = nock(ws.apiHost)
       .get('/content/lang?filter[tags]=tag1,tag2')
       .reply(200, {
         data: {},
@@ -207,7 +207,7 @@ describe('ws instance', () => {
   });
 
   it('fetchTranslations respects filterStatus', async () => {
-    const scope = nock(ws.cdsHost)
+    const scope = nock(ws.apiHost)
       .get('/content/lang?filter[status]=reviewed')
       .reply(200, {
         data: {},
@@ -222,7 +222,7 @@ describe('ws instance', () => {
   });
 
   it('fetchTranslations respects both filterTags & filterStatus', async () => {
-    const scope = nock(ws.cdsHost)
+    const scope = nock(ws.apiHost)
       .get('/content/lang?filter[tags]=tag1,tag2&filter[status]=reviewed')
       .reply(200, {
         data: {},
@@ -239,7 +239,7 @@ describe('ws instance', () => {
 
   it('retries fetching languages', async () => {
     ws.init({ token: 'abcd' });
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/languages')
       .twice()
       .reply(202)
@@ -258,7 +258,7 @@ describe('ws instance', () => {
 
   it('retries fetching languages with timeout', async () => {
     ws.init({ token: 'abcd', fetchTimeout: 50 });
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/languages')
       .delayConnection(60)
       .reply(202)
@@ -283,7 +283,7 @@ describe('ws instance', () => {
 
   it('retries fetching languages with interval', async () => {
     ws.init({ token: 'abcd', fetchInterval: 50 });
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/languages')
       .reply(202)
       .get('/languages')
@@ -303,7 +303,7 @@ describe('ws instance', () => {
 
   it('retries fetching translations', async () => {
     ws.init({ token: 'abcd' });
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/content/el')
       .twice()
       .reply(202)
@@ -315,7 +315,7 @@ describe('ws instance', () => {
 
   it('retries fetching translations with timeout', async () => {
     ws.init({ token: 'abcd', fetchTimeout: 50 });
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/content/el_timeout')
       .delayConnection(60)
       .reply(202)
@@ -333,7 +333,7 @@ describe('ws instance', () => {
 
   it('retries fetching translations with interval delays', async () => {
     ws.init({ token: 'abcd', fetchInterval: 50 });
-    nock(ws.cdsHost)
+    nock(ws.apiHost)
       .get('/content/el_interval')
       .reply(202)
       .get('/content/el_interval')

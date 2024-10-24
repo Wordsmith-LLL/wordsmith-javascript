@@ -298,7 +298,7 @@ Exposes the following methods and properties:
 ```typescript
 export interface ITranslationServiceConfig {
   token: string;
-  cdsHost?: string;
+  apiHost?: string;
   filterTags?: string;
   filterStatus?: string;
   cache?: () => void;

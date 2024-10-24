@@ -11,26 +11,23 @@ class PullCommand extends Command {
   async run() {
     const { flags } = await this.parse(PullCommand);
 
-    let cdsHost = process.env.TRANSIFEX_CDS_HOST || 'https://cds.svc.wordsmith.net';
-    let projectToken = process.env.TRANSIFEX_TOKEN;
-    let projectSecret = process.env.TRANSIFEX_SECRET;
+    let apiHost = process.env.NODE_ENV === 'production' ? 'https://api.wordsmith.is' : 'http://localhost:3000';
+    let apiToken = process.env.WORDSMITH_API_TOKEN;
 
-    if (flags.token) projectToken = flags.token;
-    if (flags.secret) projectSecret = flags.secret;
-    if (flags['cds-host']) cdsHost = flags['cds-host'];
+    if (flags.token) apiToken = flags.token;
+    if (flags['api-host']) apiHost = flags['api-host'];
 
-    if (!projectToken || !projectSecret) {
-      this.log(`${'✘'.red} Cannot pull content, credentials are missing.`);
-      this.log('Tip: Set TRANSIFEX_TOKEN and TRANSIFEX_SECRET environment variables'.yellow);
+    if (!apiToken) {
+      this.log(`${'✘'.red} Cannot pull content, API token is missing.`);
+      this.log('Tip: Set WORDSMITH_API_TOKEN environment variable'.yellow);
       process.exit();
     }
 
     try {
       // get source lang
       const params = {
-        cdsHost,
-        token: projectToken,
-        secret: projectSecret,
+        apiHost,
+        token: apiToken,
         filterTags: flags['filter-tags'],
         filterStatus: flags['filter-status'],
         locale: '',
@@ -79,14 +76,12 @@ By default, JSON files are printed in the console,
 unless the "-f foldername" parameter is provided. In that case
 the JSON files will be downloaded to that folder with the <locale>.json format.
 
-To pull content some environment variables must be set:
-TRANSIFEX_TOKEN=<Wordsmith Native Project Token>
-TRANSIFEX_SECRET=<Wordsmith Native Project Secret>
-(optional) TRANSIFEX_CDS_HOST=<CDS HOST>
+To pull content, set the WORDSMITH_API_TOKEN environment variable
+or pass it as --token=<TOKEN> parameter.
 
-or passed as --token=<TOKEN> --secret=<SECRET> parameters
-
-Default CDS Host is https://cds.svc.wordsmith.net
+The API host is determined by the NODE_ENV environment variable:
+- Production: https://api.wordsmith.is
+- Development: http://localhost:3000
 
 Examples:
 wsjs-cli pull
@@ -95,19 +90,15 @@ wsjs-cli pull -f languages/
 wsjs-cli pull --locale=fr -f .
 wsjs-cli pull --filter-tags="foo,bar"
 wsjs-cli pull --filter-status="reviewed"
-wsjs-cli pull --token=mytoken --secret=mysecret
-TRANSIFEX_TOKEN=mytoken TRANSIFEX_SECRET=mysecret wsjs-cli pull
+wsjs-cli pull --token=myapitoken
+WORDSMITH_API_TOKEN=myapitoken wsjs-cli pull
 `;
 
 PullCommand.args = [];
 
 PullCommand.flags = {
   token: Flags.string({
-    description: 'native project public token',
-    default: '',
-  }),
-  secret: Flags.string({
-    description: 'native project secret',
+    description: 'Wordsmith API token',
     default: '',
   }),
   folder: Flags.string({
@@ -133,8 +124,8 @@ PullCommand.flags = {
     default: '',
     options: ['reviewed', 'proofread', 'finalized'],
   }),
-  'cds-host': Flags.string({
-    description: 'CDS host URL',
+  'api-host': Flags.string({
+    description: 'API host URL',
     default: '',
   }),
 };

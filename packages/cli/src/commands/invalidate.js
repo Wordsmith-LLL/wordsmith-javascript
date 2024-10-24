@@ -3,37 +3,34 @@
 require('@colors/colors');
 const { Command, Flags } = require('@oclif/core');
 const { CliUx } = require('@oclif/core');
-const { invalidateCDS } = require('../api/invalidate');
+const { invalidateCache } = require('../api/invalidate');
 
 class InvalidateCommand extends Command {
   async run() {
     const { flags } = await this.parse(InvalidateCommand);
 
-    let cdsHost = process.env.TRANSIFEX_CDS_HOST || 'https://cds.svc.wordsmith.net';
-    let projectToken = process.env.TRANSIFEX_TOKEN;
-    let projectSecret = process.env.TRANSIFEX_SECRET;
+    let apiHost = process.env.NODE_ENV === 'production' ? 'https://api.wordsmith.is' : 'http://localhost:3000';
+    let apiToken = process.env.WORDSMITH_API_TOKEN;
 
-    if (flags.token) projectToken = flags.token;
-    if (flags.secret) projectSecret = flags.secret;
-    if (flags['cds-host']) cdsHost = flags['cds-host'];
+    if (flags.token) apiToken = flags.token;
+    if (flags['api-host']) apiHost = flags['api-host'];
 
-    if (!projectToken || !projectSecret) {
-      this.log(`${'✘'.red} Cannot invalidate CDS, credentials are missing.`);
-      this.log('Tip: Set TRANSIFEX_TOKEN and TRANSIFEX_SECRET environment variables'.yellow);
+    if (!apiToken) {
+      this.log(`${'✘'.red} Cannot invalidate cache, API token is missing.`);
+      this.log('Tip: Set WORDSMITH_API_TOKEN environment variable'.yellow);
       process.exit();
     }
 
     if (flags.purge) {
-      CliUx.ux.action.start('Invalidating and purging CDS cache', '', { stdout: true });
+      CliUx.ux.action.start('Invalidating and purging cache', '', { stdout: true });
     } else {
-      CliUx.ux.action.start('Invalidating CDS cache', '', { stdout: true });
+      CliUx.ux.action.start('Invalidating cache', '', { stdout: true });
     }
 
     try {
-      const res = await invalidateCDS({
-        url: cdsHost,
-        token: projectToken,
-        secret: projectSecret,
+      const res = await invalidateCache({
+        url: apiHost,
+        token: apiToken,
         purge: flags.purge,
       });
       CliUx.ux.action.stop('Success'.green);
@@ -46,8 +43,8 @@ class InvalidateCommand extends Command {
   }
 }
 
-InvalidateCommand.description = `Invalidate and refresh CDS cache
-Content for delivery is cached in CDS and refreshed automatically every hour.
+InvalidateCommand.description = `Invalidate and refresh cache
+Content for delivery is cached and refreshed automatically every hour.
 This command triggers a refresh of cached content on the fly.
 
 By default, invalidation does not remove existing cached content,
@@ -55,41 +52,35 @@ but starts the process of updating with latest translations from Wordsmith.
 
 Passing the --purge option, cached content will be forced to be deleted,
 however use that with caution, as it may introduce downtime of
-translation delivery to the apps until fresh content is cached in the CDS.
+translation delivery to the apps until fresh content is cached.
 
-To invalidate translations some environment variables must be set:
-TRANSIFEX_TOKEN=<Wordsmith Native Project Token>
-TRANSIFEX_SECRET=<Wordsmith Native Project Secret>
-(optional) TRANSIFEX_CDS_HOST=<CDS HOST>
+To invalidate translations, set the WORDSMITH_API_TOKEN environment variable
+or pass it as --token=<TOKEN> parameter.
 
-or passed as --token=<TOKEN> --secret=<SECRET> parameters
-
-Default CDS Host is https://cds.svc.wordsmith.net
+The API host is determined by the NODE_ENV environment variable:
+- Production: https://api.wordsmith.is
+- Development: http://localhost:3000
 
 Examples:
 wsjs-cli invalidate
 wsjs-cli invalidate --purge
-wsjs-cli invalidate --token=mytoken --secret=mysecret
-TRANSIFEX_TOKEN=mytoken TRANSIFEX_SECRET=mysecret wsjs-cli invalidate
+wsjs-cli invalidate --token=myapitoken
+WORDSMITH_API_TOKEN=myapitoken wsjs-cli invalidate
 `;
 
 InvalidateCommand.args = [];
 
 InvalidateCommand.flags = {
   purge: Flags.boolean({
-    description: 'force delete CDS cached content',
+    description: 'force delete cached content',
     default: false,
   }),
   token: Flags.string({
-    description: 'native project public token',
+    description: 'Wordsmith API token',
     default: '',
   }),
-  secret: Flags.string({
-    description: 'native project secret',
-    default: '',
-  }),
-  'cds-host': Flags.string({
-    description: 'CDS host URL',
+  'api-host': Flags.string({
+    description: 'API host URL',
     default: '',
   }),
 };

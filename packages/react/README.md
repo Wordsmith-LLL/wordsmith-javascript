@@ -192,7 +192,7 @@ function Component() {
 ## `useLanguages` hook
 
 Returns a state variable that will eventually hold the supported languages of
-the application. Makes an asynchronous call to the CDS.
+the application. Makes an asynchronous call to the API.
 
 ```jsx
 import React from 'react';

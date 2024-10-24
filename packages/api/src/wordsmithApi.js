@@ -28,7 +28,16 @@ async function upload({ interval = 5, ...data }) {
 }
 
 export class WordsmithApi extends JsonApi {
-  static HOST = 'https://api.wordsmith.is';
+  static get HOST() {
+    switch (process.env.NODE_ENV) {
+      case 'test':
+        return 'http://localhost:3000';
+      case 'production':
+        return 'https://api.wordsmith.is';
+      default:
+        return 'https://api.wordsmith.is';
+    }
+  }
 }
 
 class Organization extends JsonApiResource {

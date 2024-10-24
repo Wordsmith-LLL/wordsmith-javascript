@@ -142,17 +142,15 @@ class PushCommand extends Command {
         process.exit();
       }
 
-      let cdsHost = process.env.TRANSIFEX_CDS_HOST || 'https://cds.svc.wordsmith.net';
-      let projectToken = process.env.TRANSIFEX_TOKEN;
-      let projectSecret = process.env.TRANSIFEX_SECRET;
+      let apiHost = process.env.NODE_ENV === 'production' ? 'https://api.wordsmith.is' : 'http://localhost:3000';
+      let apiToken = process.env.WORDSMITH_API_TOKEN;
 
-      if (flags.token) projectToken = flags.token;
-      if (flags.secret) projectSecret = flags.secret;
-      if (flags['cds-host']) cdsHost = flags['cds-host'];
+      if (flags.token) apiToken = flags.token;
+      if (flags['api-host']) apiHost = flags['api-host'];
 
-      if (!projectToken || !projectSecret) {
-        this.log(`${'✘'.red} Cannot push content, credentials are missing.`);
-        this.log('Tip: Set TRANSIFEX_TOKEN and TRANSIFEX_SECRET environment variables'.yellow);
+      if (!apiToken) {
+        this.log(`${'✘'.red} Cannot push content, API token is missing.`);
+        this.log('Tip: Set WORDSMITH_API_TOKEN environment variable'.yellow);
         process.exit();
       }
 
@@ -164,9 +162,8 @@ class PushCommand extends Command {
       CliUx.ux.action.start(uploadMessage, '', { stdout: true });
       try {
         let res = await uploadPhrases(payload, {
-          url: cdsHost,
-          token: projectToken,
-          secret: projectSecret,
+          url: apiHost,
+          token: apiToken,
           purge: flags.purge,
           do_not_keep_translations: flags['do-not-keep-translations'],
           override_tags: flags['override-tags'],
@@ -180,14 +177,13 @@ class PushCommand extends Command {
         }
 
         // poll for completion
-        const jobUrl = `${cdsHost}${res.jobUrl}`;
+        const jobUrl = `${apiHost}${res.jobUrl}`;
         let status = '';
         do {
           await CliUx.ux.wait(1500);
           res = await pollJob({
             url: jobUrl,
-            token: projectToken,
-            secret: projectSecret,
+            token: apiToken,
           });
           if (status !== res.status) {
             status = res.status;
@@ -241,14 +237,12 @@ Parse .js, .ts, .jsx, .tsx and .html files and detect phrases marked for
 translation by Wordsmith Native toolkit for Javascript and
 upload them to Wordsmith for translation.
 
-To push content some environment variables must be set:
-TRANSIFEX_TOKEN=<Wordsmith Native Project Token>
-TRANSIFEX_SECRET=<Wordsmith Native Project Secret>
-(optional) TRANSIFEX_CDS_HOST=<CDS HOST>
+To push content, set the WORDSMITH_API_TOKEN environment variable
+or pass it as --token=<TOKEN> parameter.
 
-or passed as --token=<TOKEN> --secret=<SECRET> parameters
-
-Default CDS Host is https://cds.svc.wordsmith.net
+The API host is determined by the NODE_ENV environment variable:
+- Production: https://api.wordsmith.is
+- Development: http://localhost:3000
 
 Examples:
 wsjs-cli push -v
@@ -262,10 +256,10 @@ wsjs-cli push --key-generator=hash
 wsjs-cli push --append-tags="master,release:2.5"
 wsjs-cli push --with-tags-only="home,error"
 wsjs-cli push --without-tags-only="custom"
-wsjs-cli push --token=mytoken --secret=mysecret
+wsjs-cli push --token=myapitoken
 wsjs-cli push en.json --parser=i18next
 wsjs-cli push en.json --parser=wsnativejson
-TRANSIFEX_TOKEN=mytoken TRANSIFEX_SECRET=mysecret wsjs-cli push
+WORDSMITH_API_TOKEN=myapitoken wsjs-cli push
 `;
 
 PushCommand.args = [{
@@ -342,6 +336,14 @@ PushCommand.flags = {
     description: 'use hashed or source based keys',
     default: 'source',
     options: ['source', 'hash'],
+    token: Flags.string({
+      description: 'Wordsmith API token',
+      default: '',
+  }),
+  'api-host': Flags.string({
+    description: 'API host URL',
+    default: '',
+  }),
   }),
 };
 

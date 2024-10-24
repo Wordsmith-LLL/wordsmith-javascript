@@ -8,13 +8,13 @@ describe('TranslationService', () => {
   let service: TranslationService;
   const wsConfig: ITranslationServiceConfig = {
     token: '',
-    cdsHost: '',
+    apiHost: '',
     filterTags: '',
     filterStatus: '',
   };
   const wsTranslationConfig: ITranslationConfig = {
     token: '',
-    cdsHost: '',
+    apiHost: '',
     filterTags: '',
     filterStatus: '',
   };
