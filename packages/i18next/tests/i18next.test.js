@@ -11,7 +11,7 @@ describe('WordsmithI18next', () => {
       token: 'abcd',
     });
 
-    nock(backend.ws.cdsHost)
+    nock(backend.ws.apiHost)
       .get('/content/en')
       .reply(200, {
         data: {

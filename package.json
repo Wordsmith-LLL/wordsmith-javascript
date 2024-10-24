@@ -7,15 +7,17 @@
     "lint": "lerna run lint",
     "test": "lerna run test",
     "build": "lerna run build",
-    "clean": "rm -rf node_modules packages/**/node_modules",
+    "clean": "rm -rf node_modules package-lock.json packages/**/node_modules packages/**/package-lock.json",
     "release": "del-cli packages/**/package-lock.json && lerna version --force-publish",
-    "publish-npm": "lerna run publish-npm"
+    "publish-npm": "lerna run publish-npm",
+    "full-reset": "npm run clean && npm run bootstrap && npm run build"
   },
   "workspaces": [
     "packages/*",
     "packages/angular/projects/*"
   ],
   "devDependencies": {
+    "@types/jasmine": "^5.1.4",
     "del-cli": "^4.0.1",
     "lerna": "^8.0.0"
   }

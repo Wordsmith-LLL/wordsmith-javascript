@@ -5,15 +5,15 @@ const { sleep } = require('./utils');
 /**
  * Download languages
  *
- * @param {*} { cdsHost, token, secret }
+ * @param {*} { apiHost, token, secret }
  * @return {Promise}
  */
-async function downloadLanguages({ cdsHost, token, secret }) {
+async function downloadLanguages({ apiHost, token, secret }) {
   let response;
   let lastResponseStatus = 202;
   while (lastResponseStatus === 202) {
     /* eslint-disable no-await-in-loop */
-    response = await axios.get(`${cdsHost}/languages`, {
+    response = await axios.get(`${apiHost}/languages`, {
       headers: {
         Authorization: `Bearer ${token}:${secret}`,
         'Accept-version': 'v2',
@@ -35,17 +35,17 @@ async function downloadLanguages({ cdsHost, token, secret }) {
  * Download phrases
  *
  * @param {*} {
- *   cdsHost, locale, filterTags, filterStatus, token, secret,
+ *   apiHost, locale, filterTags, filterStatus, token, secret,
  * }
  * @return {Promise}
  */
 async function downloadPhrases({
-  cdsHost, locale, filterTags, filterStatus, token, secret,
+  apiHost, locale, filterTags, filterStatus, token, secret,
 }) {
   let response;
   let lastResponseStatus = 202;
   while (lastResponseStatus === 202) {
-    let url = `${cdsHost}/content/${locale}`;
+    let url = `${apiHost}/content/${locale}`;
 
     const getOptions = [];
     if (filterTags) {

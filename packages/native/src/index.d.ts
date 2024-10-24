@@ -11,7 +11,7 @@ declare module '@wordsmith/native' {
 
   export interface ITranslationConfig {
     cache?: IMemoryCache;
-    cdsHost?: string;
+    apiHost?: string;
     currentLocale?: string;
     errorPolicy?: IErrorPolicy;
     fetchInterval?: number;
@@ -55,7 +55,7 @@ declare module '@wordsmith/native' {
 
   export class WsNative implements ITranslationConfig {
     cache: IMemoryCache;
-    cdsHost: string;
+    apiHost: string;
     childInstances: WsNative[];
     currentLocale: string;
     errorPolicy: IErrorPolicy;

@@ -26,9 +26,10 @@ import { isPluralized } from './plurals';
  */
 export default class WsNative {
   constructor() {
-    this.cdsHost = 'https://cds.svc.wordsmith.net';
+    this.apiHost = process.env.NODE_ENV === 'production' 
+      ? 'https://api.wordsmith.is' 
+      : 'http://localhost:3000';
     this.token = '';
-    this.secret = '';
     this.filterTags = '';
     this.filterStatus = '';
     this.fetchTimeout = 0;
@@ -47,11 +48,10 @@ export default class WsNative {
    * Initialize Native instance
    *
    * @param {Object} params
-   * @param {String} params.cdsHost
+   * @param {String} params.apiHost
    * @param {String} params.filterTags
    * @param {String} params.filterStatus
    * @param {String} params.token
-   * @param {String} params.secret
    * @param {Number} params.fetchTimeout
    * @param {Number} params.fetchInterval
    * @param {Function} params.cache
@@ -62,9 +62,8 @@ export default class WsNative {
   init(params) {
     const that = this;
     [
-      'cdsHost',
+      'apiHost',
       'token',
-      'secret',
       'cache',
       'filterTags',
       'filterStatus',
@@ -167,7 +166,7 @@ export default class WsNative {
   }
 
   /**
-   * Fetch locale translations from CDS
+   * Fetch locale translations from API
    *
    * @param {String} localeCode
    * @param {Object} params
@@ -201,14 +200,14 @@ export default class WsNative {
       return err;
     };
 
-    // contact CDS
+    // contact API
     try {
       sendEvent(FETCHING_TRANSLATIONS, { localeCode, filterTags }, this);
       let response;
       let lastResponseStatus = 202;
       const tsNow = Date.now();
       while (lastResponseStatus === 202) {
-        let url = `${this.cdsHost}/content/${localeCode}`;
+        let url = `${this.apiHost}/content/${localeCode}`;
         const getOptions = [];
         if (filterTags) {
           getOptions.push(`filter[tags]=${filterTags}`);
@@ -222,7 +221,7 @@ export default class WsNative {
         response = await fetch(url, {
           method: 'GET',
           headers: {
-            Authorization: `Bearer ${this.token}`,
+            Authorization: `Token ${this.token}`,
             'Accept-version': 'v2',
             'X-NATIVE-SDK': `wsjs/${__PLATFORM__}/${__VERSION__}`,
           },
@@ -260,7 +259,7 @@ export default class WsNative {
   }
 
   /**
-   * Invalidate CDS cache
+   * Invalidate API cache
    *
    * @param {Object} params
    * @param {Boolean} params.purge
@@ -269,15 +268,14 @@ export default class WsNative {
    * @returns {Number} Data.status
    * @returns {Number} Data.token
    */
-  async invalidateCDS(params = {}) {
+  async invalidateCache(params = {}) {
     if (!this.token) throw new Error('token is not defined');
-    if (!this.secret) throw new Error('secret is not defined');
 
     const action = params.purge ? 'purge' : 'invalidate';
-    const response = await fetch(`${this.cdsHost}/${action}`, {
+    const response = await fetch(`${this.apiHost}/${action}`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.token}:${this.secret}`,
+        Authorization: `Token ${this.token}`,
         'Accept-version': 'v2',
         'Content-Type': 'application/json;charset=utf-8',
         'X-NATIVE-SDK': `wsjs/${__PLATFORM__}/${__VERSION__}`,
@@ -291,7 +289,7 @@ export default class WsNative {
   }
 
   /**
-   * Push source content to CDS.
+   * Push source content to API.
    *
    * Payload is in the following format:
    * {
@@ -326,16 +324,15 @@ export default class WsNative {
    */
   async pushSource(payload, params = {}) {
     if (!this.token) throw new Error('token is not defined');
-    if (!this.secret) throw new Error('secret is not defined');
 
     const headers = {
-      Authorization: `Bearer ${this.token}:${this.secret}`,
+      Authorization: `Token ${this.token}`,
       'Accept-version': 'v2',
       'Content-Type': 'application/json;charset=utf-8',
       'X-NATIVE-SDK': `wsjs/${__PLATFORM__}/${__VERSION__}`,
     };
 
-    const response = await fetch(`${this.cdsHost}/content`, {
+    const response = await fetch(`${this.apiHost}/content`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -353,7 +350,7 @@ export default class WsNative {
 
     const postResData = await response.json();
 
-    const jobUrl = `${this.cdsHost}${postResData.data.links.job}`;
+    const jobUrl = `${this.apiHost}${postResData.data.links.job}`;
 
     if (params.noWait) {
       return {
@@ -390,12 +387,12 @@ export default class WsNative {
   }
 
   /**
-   * Get remote project locales from CDS
-   *
-   * @param {Object} params
-   * @param {Boolean} params.refresh - Force re-fetching of content
-   * @returns {Promise<String[]>}
-   */
+    * Get remote project locales from API
+    *
+    * @param {Object} params
+    * @param {Boolean} params.refresh - Force re-fetching of content
+    * @returns {Promise<String[]>}
+    */
   async getLocales(params = {}) {
     const refresh = !!params.refresh;
 
@@ -410,17 +407,17 @@ export default class WsNative {
       return err;
     };
 
-    // contact CDS
+    // contact API
     try {
       sendEvent(FETCHING_LOCALES, null, this);
       let response;
       let lastResponseStatus = 202;
       const tsNow = Date.now();
       while (lastResponseStatus === 202) {
-        response = await fetch(`${this.cdsHost}/languages`, {
+        response = await fetch(`${this.apiHost}/languages`, {
           method: 'GET',
           headers: {
-            Authorization: `Bearer ${this.token}`,
+            Authorization: `Token ${this.token}`,
             'Accept-version': 'v2',
             'X-NATIVE-SDK': `wsjs/${__PLATFORM__}/${__VERSION__}`,
           },
