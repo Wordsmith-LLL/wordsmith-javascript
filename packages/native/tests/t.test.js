@@ -1,10 +1,6 @@
-/* globals describe, it, beforeEach */
-
 import { expect } from 'chai';
-import {
-  createNativeInstance, ThrowErrorPolicy, SourceErrorPolicy,
-} from '../src/index';
-import { generateKey } from '../src/utils';
+import nock from 'nock';
+import { createNativeInstance } from '../src/index';
 
 describe('t function', () => {
   let t;
@@ -12,81 +8,90 @@ describe('t function', () => {
 
   beforeEach(() => {
     ws = createNativeInstance();
-    t = ws.translate.bind(ws);
+    t = ws.t.bind(ws);
   });
 
-  it('translates string', () => {
-    expect(t('Hello')).to.equal('Hello');
-    expect(t('Hello {username}', { username: 'Joe' }))
+  afterEach(() => {
+    nock.cleanAll();
+  });
+
+  it('translates string', async () => {
+    nock(ws.apiHost)
+      .post('/i18next/translate')
+      .reply(200, { data: 'Hello' });
+
+    expect(await t('Hello')).to.equal('Hello');
+
+    nock(ws.apiHost)
+      .post('/i18next/translate')
+      .reply(200, { data: 'Hello Joe' });
+
+    expect(await t('Hello {username}', { username: 'Joe' }))
       .to.equal('Hello Joe');
   });
 
-  it('escapes variables', () => {
-    expect(t('Hello {username}', { username: '<b>Joe</b>', _escapeVars: true }))
-      .to.equal('Hello &lt;b&gt;Joe&lt;/b&gt;');
+  it('handles variables', async () => {
+    nock(ws.apiHost)
+      .post('/i18next/translate')
+      .reply(200, { data: 'Hello <b>Joe</b>' });
+
+    expect(await t('Hello {username}', { username: '<b>Joe</b>' }))
+      .to.equal('Hello <b>Joe</b>');
   });
 
-  it('does not escape source by default', () => {
-    expect(t('<b>Hello</b> {username}', { username: '<b>Joe</b>' }))
-      .to.equal('<b>Hello</b> <b>Joe</b>');
+  it('handles errors', async () => {
+    nock(ws.apiHost)
+      .post('/i18next/translate')
+      .reply(500, 'Internal Server Error');
+
+    try {
+      await t('Hello');
+      expect.fail('Should have thrown an error');
+    } catch (error) {
+      expect(error.message).to.include('HTTP 500');
+    }
   });
 
-  it('handles invalid parameters when _escapeVars is used', () => {
-    expect(t('Hello {username}', {
-      username: '<b>Joe</b>',
-      obj: { foo: 'bar' },
-      _escapeVars: true,
-    })).to.equal('Hello &lt;b&gt;Joe&lt;/b&gt;');
+  it('uses default values when translation fails', async () => {
+    nock(ws.apiHost)
+      .post('/i18next/translate')
+      .reply(200, {}); // Empty response, simulating translation failure
+
+    expect(await t('Hello')).to.equal('Hello');
   });
 
-  it('handles invalid parameters', () => {
-    expect(t('Hello {username}', {
-      username: '<b>Joe</b>',
-      obj: { foo: 'bar' },
-    })).to.equal('Hello <b>Joe</b>');
+  it('respects provided options', async () => {
+    nock(ws.apiHost)
+      .post('/i18next/translate', {
+        message: 'Hello',
+        sourceLocale: 'en-US',
+        targetLocale: 'fr-FR',
+        tone: 'casual',
+        industry: 'technology',
+      })
+      .reply(200, { data: 'Salut' });
+
+    expect(await t('Hello', {
+      sourceLocale: 'en-US',
+      targetLocale: 'fr-FR',
+      tone: 'casual',
+      industry: 'technology',
+    })).to.equal('Salut');
   });
 
-  it('uses error policy', () => {
-    ws.init({
-      errorPolicy: new ThrowErrorPolicy(),
-    });
-    expect(() => t('Hello {username}'))
-      .to.throw();
+  it('uses default options when not provided', async () => {
+    nock(ws.apiHost)
+      .post('/i18next/translate', {
+        message: 'Hello',
+        sourceLocale: 'en-US',
+        targetLocale: 'en-US',
+        tone: 'professional',
+        industry: 'automotive',
+      })
+      .reply(200, { data: 'Hello' });
 
-    ws.init({
-      errorPolicy: new SourceErrorPolicy(),
-    });
-    expect(t('Hello {username}'))
-      .to.equal('Hello {username}');
+    expect(await t('Hello')).to.equal('Hello');
   });
 
-  it('handles plurals', () => {
-    const prevLocale = ws.currentLocale;
-    // Using JSON to deepcopy the cache because we don't have lodash available
-    const prevTranslationsByLocale = JSON.parse(JSON.stringify(
-      ws.cache.translationsByLocale,
-    ));
-
-    const sourceString = '{cnt, plural, one {you have # message} other {you have # messages}}';
-    const key = generateKey(sourceString);
-    ws.cache.update(
-      'el',
-      { [key]: '{???, plural, one {έχετε # μήνυμα} other {έχετε # μηνύματα}}' },
-    );
-    ws.currentLocale = 'el';
-    expect(t(sourceString, { cnt: 1 })).to.equal('έχετε 1 μήνυμα');
-    expect(t(sourceString, { cnt: 2 })).to.equal('έχετε 2 μηνύματα');
-
-    // Restore the 'ws' object
-    ws.currentLocale = prevLocale;
-    ws.cache.translationsByLocale = prevTranslationsByLocale;
-  });
-
-  it('always returns a string', () => {
-    expect(t('{number}', {
-      number: 1,
-    })).to.equal('1');
-    expect(t({})).to.equal('[object Object]');
-    expect(t(null)).to.equal('null');
-  });
+  // Add more tests as needed...
 });

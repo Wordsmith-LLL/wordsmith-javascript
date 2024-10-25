@@ -44,8 +44,6 @@ Learn more about Wordsmith Native in the [Wordsmith Developer Hub](https://devel
 
 No translation files required.
 
-![native](https://raw.githubusercontent.com/Wordsmith-LLL/wordsmith-javascript/master/media/native.gif)
-
 # Upgrade to v2
 
 If you are upgrading from the `1.x.x` version, please read this [migration guide](https://github.com/Wordsmith-LLL/wordsmith-javascript/blob/HEAD/UPGRADE_TO_V2.md), as there are breaking changes in place.

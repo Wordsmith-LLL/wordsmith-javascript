@@ -1,8 +1,6 @@
-/* globals describe, it, beforeEach, afterEach */
-
 import { expect } from 'chai';
 import nock from 'nock';
-import { generateKey, createNativeInstance } from '../src/index';
+import { createNativeInstance } from '../src/index';
 
 describe('ws instance', () => {
   let t;
@@ -10,23 +8,24 @@ describe('ws instance', () => {
 
   beforeEach(() => {
     ws = createNativeInstance({
-      fetchTimeout: 0,
-      fetchInterval: 0,
+      bearerToken: 'test-token',
+      tenantClientId: 'test-tenant',
     });
-    t = ws.translate.bind(ws);
+    t = ws.t.bind(ws);
   });
 
   afterEach(() => {
     nock.cleanAll();
   });
 
-  it('getLocales fetches locales', async () => {
-    ws.init({
-      token: 'abcd',
-    });
+  it('initializes with correct values', () => {
+    expect(ws.bearerToken).to.equal('test-token');
+    expect(ws.tenantClientId).to.equal('test-tenant');
+  });
 
+  it('getLocales fetches locales', async () => {
     nock(ws.apiHost)
-      .get('/languages')
+      .get('/i18next/locales')
       .reply(200, {
         data: [
           {
@@ -38,309 +37,84 @@ describe('ws instance', () => {
         ],
       });
 
-    const locales = await ws.getLocales({ refresh: true });
-    expect(locales).to.deep.equal(['el']);
+    const locales = await ws.getLocales();
+    expect(locales).to.deep.equal({
+      data: [{
+        name: 'Greek',
+        code: 'el',
+        localized_name: 'Ελληνικά',
+        rtl: false,
+      }],
+    });
   });
 
-  it('getLanguages fetches languages', async () => {
-    ws.init({
-      token: 'abcd',
-    });
-
+  it('translate performs translation', async () => {
     nock(ws.apiHost)
-      .get('/languages')
-      .reply(200, {
-        data: [
-          {
-            name: 'German',
-            code: 'de',
-            localized_name: 'German',
-            rtl: false,
-          },
-        ],
-      });
+      .post('/i18next/translate', {
+        message: 'Hello',
+        sourceLocale: 'en-US',
+        targetLocale: 'fr-FR',
+        tone: 'professional',
+        industry: 'general',
+      })
+      .reply(200, { data: 'Bonjour' });
 
-    const langs = await ws.getLanguages({ refresh: true });
-    expect(langs).to.deep.equal([{
-      name: 'German',
-      code: 'de',
-      localized_name: 'German',
-      rtl: false,
-    }]);
+    const result = await ws.translate('Hello', 'en-US', 'fr-FR', 'professional', 'general');
+    expect(result).to.deep.equal({ data: 'Bonjour' });
   });
 
-  it('setCurrentLocale translates strings', async () => {
-    ws.init({
-      token: 'abcd',
-    });
-
+  it('t function performs translation', async () => {
     nock(ws.apiHost)
-      .get('/content/el_GR')
-      .reply(200, {
-        data: {
-          [generateKey('Hello')]: {
-            string: 'Γειά',
-          },
-          [generateKey('World')]: {},
-        },
-      });
+      .post('/i18next/translate', {
+        message: 'Hello',
+        sourceLocale: 'en-US',
+        targetLocale: 'fr-FR',
+        tone: 'professional',
+        industry: 'automotive',
+      })
+      .reply(200, { data: 'Bonjour' });
 
-    await ws.setCurrentLocale('el_GR');
-    expect(ws.getCurrentLocale()).to.equal('el_GR');
-    expect(t('Hello')).to.deep.equal('Γειά');
-    expect(t('World')).to.deep.equal('World');
-
-    // restore to source
-    await ws.setCurrentLocale('');
-    expect(t('Hello')).to.deep.equal('Hello');
+    const result = await t('Hello', { targetLocale: 'fr-FR' });
+    expect(result).to.equal('Bonjour');
   });
 
-  it('setCurrentLocale throws when remote translations are unavailable', async () => {
-    ws.init({
-      token: 'abcd',
-    });
-
+  it('handles errors correctly', async () => {
     nock(ws.apiHost)
-      .get('/content/el_GR2')
-      .reply(500);
+      .get('/context/custom-words')
+      .reply(500, 'Internal Server Error');
 
-    let threw = false;
     try {
-      await ws.setCurrentLocale('el_GR2');
-    } catch (err) {
-      threw = true;
+      await ws.getCustomWords();
+      expect.fail('Should have thrown an error');
+    } catch (error) {
+      expect(error.message).to.include('HTTP 500');
     }
-    expect(threw).to.equal(true);
-    expect(ws.getCurrentLocale()).to.equal('');
   });
 
-  it('setCurrentLocale throws when remote translations are invalid', async () => {
-    ws.init({
-      token: 'abcd',
-    });
+  // Additional tests for new methods
 
+  it('getContextLibrary fetches context library', async () => {
     nock(ws.apiHost)
-      .get('/content/el_GR2')
-      .reply(200, {});
+      .get('/context/context-library')
+      .query({ tenantClientId: 'test-tenant' })
+      .reply(200, { data: 'context library data' });
 
-    let threw = false;
-    try {
-      await ws.setCurrentLocale('el_GR2');
-    } catch (err) {
-      threw = true;
-    }
-    expect(threw).to.equal(true);
-    expect(ws.getCurrentLocale()).to.equal('');
+    const result = await ws.getContextLibrary();
+    expect(result).to.deep.equal({ data: 'context library data' });
   });
 
-  it('setCurrentLocale skips when locale is already set', async () => {
-    const current = ws.getCurrentLocale();
-    await ws.setCurrentLocale(current);
-    expect(ws.getCurrentLocale()).to.equal(current);
-  });
-
-  it('getLocales throws when remote does not respond', async () => {
-    ws.init({
-      token: 'abcd',
-    });
-
+  it('createCustomWord creates a custom word', async () => {
     nock(ws.apiHost)
-      .get('/languages')
-      .reply(500);
+      .post('/context/custom-words', {
+        originalTerm: 'original',
+        customTerm: 'custom',
+        locale: 'en-US',
+      })
+      .reply(200, { data: 'created custom word' });
 
-    let threw = false;
-    try {
-      await ws.getLocales({ refresh: true });
-    } catch (err) {
-      threw = true;
-    }
-    expect(threw).to.equal(true);
+    const result = await ws.createCustomWord('original', 'custom', 'en-US');
+    expect(result).to.deep.equal({ data: 'created custom word' });
   });
 
-  it('getLocales throws when remote response is wrong', async () => {
-    ws.init({
-      token: 'abcd',
-    });
-
-    nock(ws.apiHost)
-      .get('/languages')
-      .reply(200, {});
-
-    let threw = false;
-    try {
-      await ws.getLocales({ refresh: true });
-    } catch (err) {
-      threw = true;
-    }
-    expect(threw).to.equal(true);
-  });
-
-  it('getLocales returns empty array when token is not set', async () => {
-    ws.init({
-      token: '',
-    });
-    const locales = await ws.getLocales({ refresh: true });
-    expect(locales).to.deep.equal([]);
-  });
-
-  it('fetchTranslations does not refresh when cache has content', async () => {
-    ws.cache.update('el_CACHED', { foo: 'bar' });
-    await ws.fetchTranslations('el_CACHED');
-    expect(ws.cache.getTranslations('el_CACHED')).to.deep.equal({
-      foo: 'bar',
-    });
-  });
-
-  it('fetchTranslations respects filterTags', async () => {
-    const scope = nock(ws.apiHost)
-      .get('/content/lang?filter[tags]=tag1,tag2')
-      .reply(200, {
-        data: {},
-      });
-
-    ws.init({
-      token: '',
-      filterTags: 'tag1,tag2',
-    });
-    await ws.fetchTranslations('lang');
-    expect(scope.isDone()).to.equal(true);
-  });
-
-  it('fetchTranslations respects filterStatus', async () => {
-    const scope = nock(ws.apiHost)
-      .get('/content/lang?filter[status]=reviewed')
-      .reply(200, {
-        data: {},
-      });
-
-    ws.init({
-      token: '',
-      filterStatus: 'reviewed',
-    });
-    await ws.fetchTranslations('lang');
-    expect(scope.isDone()).to.equal(true);
-  });
-
-  it('fetchTranslations respects both filterTags & filterStatus', async () => {
-    const scope = nock(ws.apiHost)
-      .get('/content/lang?filter[tags]=tag1,tag2&filter[status]=reviewed')
-      .reply(200, {
-        data: {},
-      });
-
-    ws.init({
-      token: '',
-      filterTags: 'tag1,tag2',
-      filterStatus: 'reviewed',
-    });
-    await ws.fetchTranslations('lang');
-    expect(scope.isDone()).to.equal(true);
-  });
-
-  it('retries fetching languages', async () => {
-    ws.init({ token: 'abcd' });
-    nock(ws.apiHost)
-      .get('/languages')
-      .twice()
-      .reply(202)
-      .get('/languages')
-      .reply(200, {
-        data: [{
-          name: 'Greek',
-          code: 'el',
-          localized_name: 'Ελληνικά',
-          rtl: false,
-        }],
-      });
-    const locales = await ws.getLocales({ refresh: true });
-    expect(locales).to.deep.equal(['el']);
-  });
-
-  it('retries fetching languages with timeout', async () => {
-    ws.init({ token: 'abcd', fetchTimeout: 50 });
-    nock(ws.apiHost)
-      .get('/languages')
-      .delayConnection(60)
-      .reply(202)
-      .get('/languages')
-      .reply(200, {
-        data: [{
-          name: 'Greek',
-          code: 'el',
-          localized_name: 'Ελληνικά',
-          rtl: false,
-        }],
-      });
-
-    let hasError = false;
-    try {
-      await ws.getLocales({ refresh: true });
-    } catch (err) {
-      hasError = true;
-    }
-    expect(hasError).to.equal(true);
-  });
-
-  it('retries fetching languages with interval', async () => {
-    ws.init({ token: 'abcd', fetchInterval: 50 });
-    nock(ws.apiHost)
-      .get('/languages')
-      .reply(202)
-      .get('/languages')
-      .reply(200, {
-        data: [{
-          name: 'Greek',
-          code: 'el',
-          localized_name: 'Ελληνικά',
-          rtl: false,
-        }],
-      });
-
-    const ts = Date.now();
-    await ws.getLocales({ refresh: true });
-    expect(Date.now() - ts).to.be.greaterThan(50);
-  });
-
-  it('retries fetching translations', async () => {
-    ws.init({ token: 'abcd' });
-    nock(ws.apiHost)
-      .get('/content/el')
-      .twice()
-      .reply(202)
-      .get('/content/el')
-      .reply(200, { data: { source: { string: 'translation' } } });
-    await ws.fetchTranslations('el');
-    expect(ws.cache.get('source', 'el')).to.equal('translation');
-  });
-
-  it('retries fetching translations with timeout', async () => {
-    ws.init({ token: 'abcd', fetchTimeout: 50 });
-    nock(ws.apiHost)
-      .get('/content/el_timeout')
-      .delayConnection(60)
-      .reply(202)
-      .get('/content/el_timeout')
-      .reply(200, { data: { source: { string: 'translation' } } });
-
-    let hasError = false;
-    try {
-      await ws.fetchTranslations('el_timeout');
-    } catch (err) {
-      hasError = true;
-    }
-    expect(hasError).to.equal(true);
-  });
-
-  it('retries fetching translations with interval delays', async () => {
-    ws.init({ token: 'abcd', fetchInterval: 50 });
-    nock(ws.apiHost)
-      .get('/content/el_interval')
-      .reply(202)
-      .get('/content/el_interval')
-      .reply(200, { data: { source: { string: 'translation' } } });
-
-    const ts = Date.now();
-    await ws.fetchTranslations('el_interval');
-    expect(Date.now() - ts).to.be.greaterThan(50);
-  });
+  // Add more tests for other new methods...
 });

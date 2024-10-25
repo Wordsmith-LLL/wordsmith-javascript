@@ -29,24 +29,15 @@ Learn more about Wordsmith Native in the [Wordsmith Developer Hub](https://devel
 
 # How it works
 
-**Step1**: Create a Wordsmith Native project in [Wordsmith](https://www.wordsmith.is).
+**Step1**: Receive a Wordsmith API key by subscribing on [Wordsmith](https://www.wordsmith.is).
 
-**Step2**: Grab credentials.
+**Step2**: Internationalize the code using the SDK.
 
-**Step3**: Internationalize the code using the SDK.
+**Step3**: Push source phrases using the `@wordsmith/cli` tool.
 
-**Step4**: Push source phrases using the `@wordsmith/cli` tool.
-
-**Step5**: Translate the app using over-the-air updates.
+**Step4**: Translate the app using over-the-air updates.
 
 No translation files required.
-
-![native](https://raw.githubusercontent.com/Wordsmith-LLL/wordsmith-javascript/master/media/native.gif)
-
-# Upgrade to v2
-
-If you are upgrading from the `1.x.x` version, please read this [migration guide](https://github.com/Wordsmith-LLL/wordsmith-javascript/blob/HEAD/UPGRADE_TO_V2.md), as there are breaking changes in place.
-
 
 # Install
 
@@ -73,21 +64,7 @@ function Example() {
     </div>
   );
 }
-
 ```
-
-Available optional props:
-
-| Prop       | Type   | Description                                 |
-|------------|--------|---------------------------------------------|
-| _context   | String | String context, affects key generation      |
-| _key       | String | Custom string key                           |
-| _comment   | String | Developer comment                           |
-| _charlimit | Number | Character limit instruction for translators |
-| _tags      | String | Comma separated list of tags                |
-
-The T-component can accept React elements as properties and they will be
-rendered properly, ie this would be possible:
 
 ```javascript
 <T
