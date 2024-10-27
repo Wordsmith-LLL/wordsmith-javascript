@@ -23,7 +23,7 @@
   "repository": "git://github.com/Wordsmith-LLL/wordsmith-javascript.git",
   "scripts": {
     "lint": "eslint src/ tests/",
-    "build": "NODE_ENV=production webpack --config ./webpack.config.js && cp src/index.d.ts dist/node.native.d.ts",
+    "build": "NODE_ENV=production webpack --config ./webpack.config.js && cp src/index.d.ts dist/node.native.d.ts && cp src/index.d.ts dist/browser.native.d.ts",
     "test": "NODE_ENV=test webpack --config webpack.test.js && nyc --reporter=text mocha --exit dist/test.native.js --require source-map-support/register && rm -f ./dist/test.*",
     "publish-npm": "npm publish"
   },

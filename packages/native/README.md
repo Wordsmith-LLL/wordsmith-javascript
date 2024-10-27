@@ -44,8 +44,6 @@ Learn more about Wordsmith Native in the [Wordsmith Developer Hub](https://devel
 
 No translation files required.
 
-![native](https://raw.githubusercontent.com/Wordsmith-LLL/wordsmith-javascript/master/media/native.gif)
-
 # Upgrade to v2
 
 If you are upgrading from the `1.x.x` version, please read this [migration guide](https://github.com/Wordsmith-LLL/wordsmith-javascript/blob/HEAD/UPGRADE_TO_V2.md), as there are breaking changes in place.
@@ -136,8 +134,8 @@ ws.init({
   // Public project token, defaults to empty string
   token: String,
 
-  // CDS endpoint, defaults to https://cds.svc.wordsmith.net
-  cdsHost: String,
+  // API endpoint, defaults to https://api.wordsmith.is
+  apiHost: String,
 
   // Fetch only strings that contain specific tags from CDS, e.g. "master,react"
   filterTags: String,
@@ -188,7 +186,7 @@ ws.getLanguages().
   catch(err => console.log(err))
 ```
 
-Get a list of available locales based on CDS.
+Get a list of available locales based on the API.
 
 ```js
 ws.getLocales(): Promise(['code', 'code',...])
@@ -350,29 +348,28 @@ await ws.pushSource({
 });
 ```
 
-## Invalidate CDS cache
-
-Server side integrations can also invalidate the CDS cache programmatically.
-
-```js
-ws.invalidateCDS({
-  // if true, then purge the cache entirely (not recommended)
-  purge: Boolean,
-}): Promise
-```
-
-For example:
-
-```js
-const { createNativeInstance } = require('@wordsmith/native');
-
-const ws = createNativeInstance({
-  token: 'token',
-  secret: 'secret',
-});
-
-await ws.invalidateCDS();
-```
+## Invalidate API cache
+ 
+ Server side integrations can also invalidate the API cache programmatically.
+ 
+ ```js
+ ws.invalidateCache({
+   // if true, then purge the cache entirely (not recommended)
+   purge: Boolean,
+ }): Promise
+ ```
+ 
+ For example:
+ 
+ ```js
+ const { createNativeInstance } = require('@wordsmith/native');
+ 
+ const ws = createNativeInstance({
+   token: 'token',
+ });
+ 
+ await ws.invalidateCache();
+ ```
 
 ## Events
 

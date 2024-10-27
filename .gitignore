@@ -11,3 +11,4 @@ lerna-debug.log
 .idea
 npm-debug.log*
 tags
+wordsmith-vue-test
