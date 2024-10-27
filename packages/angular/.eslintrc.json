@@ -1,78 +1,56 @@
 {
-  "root": true,
-  "reportUnusedDisableDirectives": true,
-  "ignorePatterns": [
-    "projects/**/*"
-  ],
-  "overrides": [
-    {
-      "files": [
-        "*.ts"
-      ],
-      "parserOptions": {
-        "project": [
-          "tsconfig.json"
+    "root": true,
+    "ignorePatterns": [
+      "projects/**/*"
+    ],
+    "include": [
+        "src/**/*.ts"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "*.ts"
         ],
-        "createDefaultProgram": true,
-        "warnOnUnsupportedTypeScriptVersion": true
-      },
-      "plugins": [
-        "eslint-plugin-import",
-        "eslint-plugin-prefer-arrow",
-        "eslint-plugin-promise",
-        "eslint-plugin-rxjs",
-        "eslint-plugin-rxjs-angular",
-        "eslint-plugin-tsdoc",
-        "eslint-plugin-unicorn"
-      ],
-      "extends": [
-        "plugin:@angular-eslint/recommended",
-        "plugin:@angular-eslint/template/process-inline-templates",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:import/recommended",
-        "plugin:import/typescript",
-        "plugin:promise/recommended",
-        "plugin:rxjs/recommended",
-        "plugin:unicorn/recommended"
-      ],
-      "rules": {
-        "@typescript-eslint/no-unused-vars": [
-          "error",
-          {
-            "varsIgnorePattern": "^_",
-            "argsIgnorePattern": "^_"
-          }
+        "parserOptions": {
+          "project": [
+            "tsconfig.json"
+          ],
+          "createDefaultProgram": true
+        },
+        "extends": [
+          "plugin:@angular-eslint/recommended",
+          "plugin:@angular-eslint/template/process-inline-templates",
+          "airbnb-typescript/base"
         ],
-        "class-methods-use-this": "off",
-        "import/no-extraneous-dependencies": [
-          "error",
-          {
-            "devDependencies": [
-              "**/*.spec.ts"
-            ],
-            "packageDir": "./"
-          }
-        ],
-        "tsdoc/syntax": "warn",
-        "unicorn/filename-case": "off",
-        "unicorn/prevent-abbreviations": "off"
-      },
-      "settings": {
-        "import/resolver": {
-          "typescript": {
-            "alwaysTryTypes": true
-          }
+        "rules": {
+          "@angular-eslint/directive-selector": [
+            "error",
+            {
+              "type": "attribute",
+              "prefix": "ws",
+              "style": "camelCase"
+            }
+          ],
+          "@angular-eslint/component-selector": [
+            "error",
+            {
+              "type": "element",
+              "prefix": "ws",
+              "style": "kebab-case"
+            }
+          ],
+          "import/prefer-default-export": "off",
+          "@typescript-eslint/lines-between-class-members": "off"
         }
+      },
+      {
+        "files": [
+          "*.html"
+        ],
+        "extends": [
+          "plugin:@angular-eslint/template/recommended"
+        ],
+        "rules": {}
       }
-    },
-    {
-      "files": [
-        "*.html"
-      ],
-      "extends": [
-        "plugin:@angular-eslint/template/recommended"
-      ],
-      "rules": {}
-    }
-  ]
-}
+    ]
+  }

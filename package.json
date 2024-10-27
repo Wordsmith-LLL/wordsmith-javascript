@@ -14,10 +14,11 @@
     "dev-link": "cd packages/angular/ && npm link && cd ../native/ && npm link && cd ../react/ && npm link && cd ../vue2/ && npm link && cd ../vue3/ && npm link"
   },
   "workspaces": [
-    "packages/*",
-    "packages/angular/projects/*"
+    "packages/*"
   ],
   "devDependencies": {
-    "@types/jasmine": "^5.1.4"
+    "@types/jasmine": "^5.1.4",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
   }
 }
